@@ -45,28 +45,14 @@ public class A2_G13_t2 {
         ArrayList<Set<String>> ret = new ArrayList<>();
         Map<String, Set<String>> graph = makeGraph(db, eps);
         Set<String> corePoints = getCores(graph, mu);
-        Set<String> visited = new HashSet<>(), discovered = new HashSet<>();
-        LinkedList<String> stack = new LinkedList<>();
-        for(String s: corePoints) if(!visited.contains(s)) {
-            stack.add(s);
-            visited.add(s);
+        Set<String> discovered = new HashSet<>();
+
+        for(String s: corePoints) if(!discovered.contains(s)) {
             discovered.add(s);
-            Set<String> cluster = new HashSet<>();
-            while (!stack.isEmpty()) {
-                String node = stack.removeLast();
-                cluster.add(node);
-                if(corePoints.contains(node)) {
-                    visited.add(node);
-                    for (String k : graph.get(node)) if(!discovered.contains(k)) {
-                        discovered.add(k);
-                        if (corePoints.contains(k)) {
-                            stack.add(k);
-                        }
-                    }
-                }
-            }
-            ret.add(cluster);
+            ret.add(findCluster(graph, s, corePoints, discovered));
         }
+
+//        ret.sort();
 
         return ret;
     }
@@ -82,8 +68,25 @@ public class A2_G13_t2 {
 
     private static Set<String> getCores(Map<String, Set<String>> graph, int mu) {
         Set<String> ret = new HashSet<>();
-        for(String s: graph.keySet()) if(graph.get(s).size()>=mu) ret.add(s);
+        for(String s: graph.keySet()) if(graph.get(s).size()>=mu-1) ret.add(s);
         return ret;
+    }
+
+    private static Set<String> findCluster(Map<String, Set<String>> graph, String s, Set<String> corePoints, Set<String> discovered) {
+        LinkedList<String> stack = new LinkedList<>();
+        stack.push(s);
+        Set<String> cluster = new HashSet<>();
+        while (!stack.isEmpty()) {
+            String node = stack.pop();
+            cluster.add(node);
+            if(corePoints.contains(node)) {
+                for (String nb : graph.get(node)) if(!discovered.contains(nb)) {
+                    discovered.add(nb);
+                    stack.push(nb);
+                }
+            }
+        }
+        return cluster;
     }
 
     public static void manual(String msg) {
@@ -96,20 +99,43 @@ public class A2_G13_t2 {
         String path = args[0], line;
         try (BufferedReader br = new BufferedReader(new FileReader(path))) {
             line = br.readLine();
-            int idx = line.indexOf(',');
+            int idx = line.indexOf(','), lastidx=line.lastIndexOf(',');;
             String title=line.substring(0, idx);
-            ArrayList<Double> vals = Arrays.stream(line.substring(idx+1).split(",")).map(Double::parseDouble).collect(Collectors.toCollection(ArrayList::new));
+            ArrayList<Double> vals = Arrays.stream(line.substring(idx+1, lastidx).split(",")).map(Double::parseDouble).collect(Collectors.toCollection(ArrayList::new));
             dim = vals.size();
             database.put(title, new Point(vals));
             while ((line = br.readLine()) != null) {
                 idx = line.indexOf(',');
+                lastidx=line.lastIndexOf(',');
                 title=line.substring(0, idx);
-                vals = Arrays.stream(line.substring(idx+1).split(",")).map(Double::parseDouble).collect(Collectors.toCollection(ArrayList::new));
+                vals = Arrays.stream(line.substring(idx+1,  lastidx).split(",")).map(Double::parseDouble).collect(Collectors.toCollection(ArrayList::new));
                 database.put(title, new Point(vals));
             }
         } catch (IOException e) {
             e.printStackTrace();
             return;
+        }
+        // If mu or something is given.
+        if(args.length==2) {
+            try {
+                mu = Integer.parseInt(args[1]);
+            }
+            catch(NumberFormatException e) {
+                eps = Double.parseDouble(args[1]);
+                e.printStackTrace();
+                return;
+            }
+        }
+        if(args.length >= 3) {
+            try {
+                mu = Integer.parseInt(args[1]);
+                eps = Double.parseDouble(args[2]);
+            }
+            catch(NumberFormatException e) {
+                eps = Double.parseDouble(args[1]);
+                mu = Integer.parseInt(args[1]);
+                return;
+            }
         }
 
         ArrayList<Set<String>> clusters = dbscan(database, eps, mu);
