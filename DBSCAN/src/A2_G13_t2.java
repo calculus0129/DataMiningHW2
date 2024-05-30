@@ -73,24 +73,23 @@ public class A2_G13_t2 {
     }
 
     // Creating an edge-list graph of points of the dataset in which two points are incident iff their distance <= eps.
-    private static Map<Point, Set<Point>> makeGraph(Collection<Point> db, double eps) {
+    private static Map<Point, Set<Point>> makeGraph(final Collection<Point> db, double eps) {
         Map<Point, Set<Point>> ret = new HashMap<>();
         for(Point p: db) for(Point q: db) if(Point.dist(p, q)<=eps && !p.equals(q)) {
             ret.computeIfAbsent(p, k->new HashSet<>()).add(q);
-//            ret.computeIfAbsent(q.getKey(), k->new HashSet<>()).add(p.getKey());
         }
         return ret;
     }
 
     // Finding all core points based on the edge-list graph.
-    private static Set<Point> getCores(Map<Point, Set<Point>> graph, int mu) {
+    private static Set<Point> getCores(final Map<Point, Set<Point>> graph, int mu) {
         Set<Point> ret = new HashSet<>();
         for(Point s: graph.keySet()) if(graph.get(s).size()>=mu-1) ret.add(s);
         return ret;
     }
 
     // Finding cluster of a core point.
-    private static Set<Point> findCluster(Map<Point, Set<Point>> graph, Point s, Set<Point> corePoints, Set<Point> discovered) {
+    private static Set<Point> findCluster(final Map<Point, Set<Point>> graph, Point s, Set<Point> corePoints, Set<Point> discovered) {
         LinkedList<Point> stack = new LinkedList<>();
         stack.push(s);
         Set<Point> cluster = new HashSet<>();
@@ -178,6 +177,7 @@ public class A2_G13_t2 {
             }
             else {
                 // TODO
+                System.out.println("Data NOT read!");
                 return;
             }
         }
@@ -208,7 +208,7 @@ public class A2_G13_t2 {
         });
         if(mu == 0) {
             mu = dim<<1;
-            System.out.println("Estimated MinPts: "+mu);
+            System.out.println("Estimated MinPts : "+mu);
         }
         if(eps == 0.0) {
             eps = epsEstimate(data, mu);
@@ -219,7 +219,7 @@ public class A2_G13_t2 {
         ArrayList<Set<Point>> clusters = dbscan(data, eps, mu);
 
         System.out.printf("Number of clusters : %d\n", clusters.size());
-        System.out.printf("Number of noise: %d%n",
+        System.out.printf("Number of noise : %d%n",
                 clusters.stream()
                         .mapToInt(Set::size)
                         .sum());
@@ -230,6 +230,13 @@ public class A2_G13_t2 {
                 System.out.println();
             }
         }
+
+        // Evaluation
+
+        List<Integer> confusion = getConfusion(database.values(), clusters);
+        int tp = confusion.get(0), fp = confusion.get(1), tn = confusion.get(2), fn = confusion.get(3);
+        System.out.println("TP: " + confusion.get(0) + ", FP: " + confusion.get(1) + ", TN: " + confusion.get(2) + ", FN: " + confusion.get(3));
+        System.out.printf("Accuracy: %d/%d (%.3f%%) \n", tp+tn, tp+fp+tn+fn, 100*(double)(tp+tn)/(tp+fp+tn+fn));
     }
 
     // Called for data from the examples, etc.
@@ -258,5 +265,47 @@ public class A2_G13_t2 {
             return false;
         }
         return true;
+    }
+
+    // The TP, FP, TN, FN result
+    private static List<Integer> getConfusion(final Collection<Set<Point>> ans, final Collection<Set<Point>> clusters) {
+        Map<Point, Integer> ansMap = buildMap(ans);
+        Map<Point, Integer> clusterMap = buildMap(clusters);
+
+        int tp = 0, fp = 0, tn = 0, fn = 0;
+
+        List<Point> points = new ArrayList<>();
+        for (Set<Point> set : ans) {
+            points.addAll(set);
+        }
+
+        for (int i = 0, j, e=points.size(); i < e; i++) {
+            for (j = i + 1; j < e; j++) {
+                Point p = points.get(i);
+                Point q = points.get(j);
+
+                boolean sameAns = Objects.equals(ansMap.get(p), ansMap.get(q));
+                boolean sameCluster = Objects.equals(clusterMap.get(p), clusterMap.get(q)) && clusterMap.get(p)!=null;
+
+                if (sameCluster && sameAns) tp++;
+                if (sameCluster && !sameAns) fp++;
+                if (!sameCluster && !sameAns) tn++;
+                if (!sameCluster && sameAns) fn++;
+            }
+        }
+
+        return List.of(tp, fp, tn, fn);
+    }
+
+    private static Map<Point, Integer> buildMap(Collection<Set<Point>> collection) {
+        Map<Point, Integer> pointToSetMap = new HashMap<>();
+        int setId = 0;
+        for (Set<Point> set : collection) {
+            for (Point p : set) {
+                pointToSetMap.put(p, setId);
+            }
+            setId++;
+        }
+        return pointToSetMap;
     }
 }
