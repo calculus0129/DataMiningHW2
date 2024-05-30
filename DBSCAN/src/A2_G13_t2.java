@@ -224,9 +224,18 @@ public class A2_G13_t2 {
                         .mapToInt(Set::size)
                         .sum());
         if(isExample) {
-            for(int i=0,e=clusters.size();i<e;++i) {
-                System.out.printf("Cluster #%d\t=>\t", i+1);
-                for(Point s: clusters.get(i)) System.out.print(names.get(s)+String.valueOf(' '));
+            ArrayList<List<String>> clusterLabels = clusters.stream()
+                    .map(cluster -> cluster.stream()
+                            .map(p -> names.get(p)) // Replace each identifier with its corresponding name
+                            .collect(Collectors.toList())) // Collect names into a List to form a transformed cluster
+                    .collect(Collectors.toCollection(ArrayList::new)); // Collect transformed clusters into an ArrayList
+
+            sortCollectionOfLists(clusterLabels);
+
+            // Display sorted clusters
+            for (int i = 0, e = clusterLabels.size(); i < e; ++i) {
+                System.out.printf("Cluster #%d\t=>\t", i + 1);
+                clusterLabels.get(i).forEach(s -> System.out.print(s + " "));
                 System.out.println();
             }
         }
@@ -239,7 +248,7 @@ public class A2_G13_t2 {
         System.out.printf("Accuracy: %d/%d (%.3f%%) \n", tp+tn, tp+fp+tn+fn, 100*(double)(tp+tn)/(tp+fp+tn+fn));
     }
 
-    // Called for data from the examples, etc.
+    // Called for data from the given examples with additional label for each data (which is not necessary).
     private static boolean getExamples(String path, Map<Point, String> names) {
         String line;
         try (BufferedReader br = new BufferedReader(new FileReader(path))) {
@@ -297,6 +306,7 @@ public class A2_G13_t2 {
         return List.of(tp, fp, tn, fn);
     }
 
+    // Literally, build a map that maps points to its arbitrarily given corresponding cluster id.
     private static Map<Point, Integer> buildMap(Collection<Set<Point>> collection) {
         Map<Point, Integer> pointToSetMap = new HashMap<>();
         int setId = 0;
@@ -307,5 +317,27 @@ public class A2_G13_t2 {
             setId++;
         }
         return pointToSetMap;
+    }
+
+    // Sort the output of the results of the given example datasets.
+    private static void sortCollectionOfLists(ArrayList<List<String>> collection) {
+        // Define a custom comparator that compares based on the numeric part of the strings
+        Comparator<String> numericComparator = (s1, s2) -> {
+            int num1 = Integer.parseInt(s1.substring(1)); // Extract number part, skip 'p'
+            int num2 = Integer.parseInt(s2.substring(1)); // Extract number part, skip 'p'
+            return Integer.compare(num1, num2); // Compare the numbers
+        };
+
+        // Sort each list in the main collection
+        for (List<String> list : collection) {
+            list.sort(numericComparator); // Sort each individual list
+        }
+
+        // Sort the collection of lists based on the lexicographic order of the first element
+        collection.sort((list1, list2) -> {
+            String first1 = list1.get(0); // Get first element of list1
+            String first2 = list2.get(0); // Get first element of list2
+            return numericComparator.compare(first1, first2); // Compare using numericComparator
+        });
     }
 }
