@@ -97,23 +97,25 @@ public class A2_G13_t2 {
 //        System.out.println(args.length);
 //        for(String s: args) System.out.println(s); // ./resources/artd-31.csv
         String path = args[0], line;
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-            line = br.readLine();
-            int idx = line.indexOf(','), lastidx=line.lastIndexOf(',');;
-            String title=line.substring(0, idx);
-            ArrayList<Double> vals = Arrays.stream(line.substring(idx+1, lastidx).split(",")).map(Double::parseDouble).collect(Collectors.toCollection(ArrayList::new));
-            dim = vals.size();
-            database.put(title, new Point(vals));
-            while ((line = br.readLine()) != null) {
-                idx = line.indexOf(',');
-                lastidx=line.lastIndexOf(',');
-                title=line.substring(0, idx);
-                vals = Arrays.stream(line.substring(idx+1,  lastidx).split(",")).map(Double::parseDouble).collect(Collectors.toCollection(ArrayList::new));
+        if(args[0].endsWith(".csv")) {
+            try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+                line = br.readLine();
+                int idx = line.indexOf(','), lastidx = line.lastIndexOf(',');
+                String title = line.substring(0, idx);
+                ArrayList<Double> vals = Arrays.stream(line.substring(idx + 1, lastidx).split(",")).map(Double::parseDouble).collect(Collectors.toCollection(ArrayList::new));
+                dim = vals.size();
                 database.put(title, new Point(vals));
+                while ((line = br.readLine()) != null) {
+                    idx = line.indexOf(',');
+                    lastidx = line.lastIndexOf(',');
+                    title = line.substring(0, idx);
+                    vals = Arrays.stream(line.substring(idx + 1, lastidx).split(",")).map(Double::parseDouble).collect(Collectors.toCollection(ArrayList::new));
+                    database.put(title, new Point(vals));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
         }
         // If mu or something is given.
         if(args.length==2) {
