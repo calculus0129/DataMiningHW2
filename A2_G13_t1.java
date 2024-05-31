@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.*;
 import java.lang.Math;
 
-public class A1_G13_t1 {
+public class A2_G13_t1 {
     /* DATA STRUCTURES */
     // point class for representing 2d points
     public static class point {
