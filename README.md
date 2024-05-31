@@ -1,43 +1,82 @@
-# Project Title
+# K-means and DBSCAN
 
-One Paragraph of project description goes here
+The second homework for the introduction to data mining course on implementing the K-means algorithm and DBSCAN.
 
 ## K-means++
 A2_G13_t1.java
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+You need JDK 11 to run the application.
+
+[//]: # (These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.)
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
+[//]: # (What things you need to install the software and how to install them)
 
-```
-Give examples
-```
+[//]: # (```)
+
+[//]: # (Give examples)
+
+[//]: # (```)
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running
+[//]: # (A step by step series of examples that tell you how to get a development env running)
 
-Say what the step will be
+[//]: # ()
+[//]: # (Say what the step will be)
 
-```
-Give the example
-```
+[//]: # ()
+[//]: # (```)
 
-And repeat
+[//]: # (Give the example)
 
-```
-until finished
-```
+[//]: # (```)
 
-End with an example of getting some data out of the system or using it for a little demo
+[//]: # ()
+[//]: # (And repeat)
+
+[//]: # ()
+[//]: # (```)
+
+[//]: # (until finished)
+
+[//]: # (```)
+
+[//]: # (End with an example of getting some data out of the system or using it for a little demo)
 
 ## Running the tests
 
-Explain how to run the automated tests for this system
+[//]: # (Explain how to run the automated tests for this system)
+
+### DBSCAN
+
+There are 2 possible options to run this.
+
+#### Normal Running
+
+From the `/experiments`, run this command with your specified parameters.
+
+```bash
+sh run.sh <your-specified-command>
+```
+
+e.g. `sh run.sh ../resources/artd-31.csv`
+
+Then the program will output the ones described in the assignment manual.
+
+#### Experiment
+
+From the `/experiments`, run this command:
+
+```bash
+sh runExp.sh
+```
+
+Then the program will output the ones that yield the table in the report.
+
 
 ### Break down into end to end tests
 
