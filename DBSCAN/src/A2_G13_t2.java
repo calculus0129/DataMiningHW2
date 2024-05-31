@@ -58,16 +58,18 @@ public class A2_G13_t2 {
     }
 
     // The plain dbscan. This returns the ArrayList of cluster sets of points. Noise points are excluded from their union.
-    private static ArrayList<Set<Point>> dbscan(Collection<Point> db, double eps, int mu) {
+    private static ArrayList<Set<Point>> dbscan(Set<Point> db, double eps, int mu) {
         ArrayList<Set<Point>> ret = new ArrayList<>();
         Map<Point, Set<Point>> graph = makeGraph(db, eps);
         Set<Point> corePoints = getCores(graph, mu);
-        Set<Point> discovered = new HashSet<>();
+        Set<Point> discovered = new HashSet<>(); // Add undiscovered later...
 
         for(Point s: corePoints) if(!discovered.contains(s)) {
             discovered.add(s);
             ret.add(findCluster(graph, s, corePoints, discovered));
         }
+        // Add noise as clusters
+//        ret.add();
 
         return ret;
     }
@@ -345,10 +347,15 @@ public class A2_G13_t2 {
         }
         if(eps == 0.0) {
             // Single epsEstimate value? Let's first take the minimum of the four candidates.
-            eps = epsEstimates(data, mu).stream().min(Double::compareTo).get();
+//            eps = epsEstimates(data, mu).stream().min(Double::compareTo).get();
+            // Update: Generally, it seems to work best for the fourth candidate, although it may not be the case.
+//            eps = epsEstimates(data, mu).get(3); // result: acc: 8.77%(very shocking) for boxes3
+            // 60~% for the given dataset,
+            // 1
+            eps = epsEstimates(data, mu).get(0);
             System.out.println("Estimated eps: "+eps);
         }
-        runAndEvaluate(data, mu, eps);
+        runAndEvaluate(data, mu, eps, names, true);
     }
 
     private static Map<Point, String> readFile(String path, boolean isExample) throws Exception {
@@ -385,7 +392,7 @@ public class A2_G13_t2 {
         return names;
     }
 
-    private static void runAndEvaluate(Set<Point> data, int mu, double eps) {
+    private static void runAndEvaluate(Set<Point> data, int mu, double eps, Map<Point, String> names, boolean export) throws IOException {
 
 //        System.out.println("size of data: "+data.size());
 
@@ -396,22 +403,22 @@ public class A2_G13_t2 {
                 clusters.stream()
                         .mapToInt(Set::size)
                         .sum());
-//        if(isExample) {
-//            ArrayList<List<String>> clusterLabels = clusters.stream()
-//                    .map(cluster -> cluster.stream()
-//                            .map(p -> names.get(p)) // Replace each identifier with its corresponding name
-//                            .collect(Collectors.toList())) // Collect names into a List to form a transformed cluster
-//                    .collect(Collectors.toCollection(ArrayList::new)); // Collect transformed clusters into an ArrayList
-//
-//            sortCollectionOfLists(clusterLabels);
-//
-//            // Display sorted clusters
-//            for (int i = 0, e = clusterLabels.size(); i < e; ++i) {
-//                System.out.printf("Cluster #%d\t=>\t", i + 1);
-//                clusterLabels.get(i).forEach(s -> System.out.print(s + " "));
-//                System.out.println();
-//            }
-//        }
+        if(!names.isEmpty()) { // as isExample
+            ArrayList<List<String>> clusterLabels = clusters.stream()
+                    .map(cluster -> cluster.stream()
+                            .map(p -> names.get(p)) // Replace each identifier with its corresponding name
+                            .collect(Collectors.toList())) // Collect names into a List to form a transformed cluster
+                    .collect(Collectors.toCollection(ArrayList::new)); // Collect transformed clusters into an ArrayList
+
+            sortCollectionOfLists(clusterLabels);
+
+            // Display sorted clusters
+            for (int i = 0, e = clusterLabels.size(); i < e; ++i) {
+                System.out.printf("Cluster #%d\t=>\t", i + 1);
+                clusterLabels.get(i).forEach(s -> System.out.print(s + " "));
+                System.out.println();
+            }
+        }
 
         // Evaluation
 
@@ -419,6 +426,31 @@ public class A2_G13_t2 {
         int tp = confusion.get(0), fp = confusion.get(1), tn = confusion.get(2), fn = confusion.get(3);
         System.out.println("TP: " + confusion.get(0) + ", FP: " + confusion.get(1) + ", TN: " + confusion.get(2) + ", FN: " + confusion.get(3));
         System.out.printf("Accuracy: %d/%d (%.3f%%) \n", tp+tn, tp+fp+tn+fn, 100*(double)(tp+tn)/(tp+fp+tn+fn));
+
+        if(export) {
+            exportToCSV(clusters, "output.csv");
+            System.out.println("Cluster Data exported successfully.");
+        }
+    }
+
+    public static void exportToCSV(ArrayList<Set<Point>> clusters, String filePath) throws IOException {
+        Map<Point, Integer> pointToClusterId = buildMap(clusters);
+        try (FileWriter csvWriter = new FileWriter(filePath)) {
+            // Write header
+//            csvWriter.append("X, Y, ClusterID\n");
+
+            // Write data
+            for (Map.Entry<Point, Integer> entry : pointToClusterId.entrySet()) {
+                Point p = entry.getKey();
+                Integer clusterId = entry.getValue();
+                csvWriter.append(String.valueOf(p.coord.get(0)))
+                        .append(",")
+                        .append(String.valueOf(p.coord.get(1)))
+                        .append(",")
+                        .append(String.valueOf(clusterId))
+                        .append("\n");
+            }
+        }
     }
 
     // Called for data from the given examples with additional label for each data (which is not necessary).
